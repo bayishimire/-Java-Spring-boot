@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .flow-unified-view})}">
+        <div class="flow-unified-view">
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1">Live Patient Traffic & Flow</h2>
+                    <p class="text-muted fw-600">Visual tracking of clinical movements across all hospital departments.</p>
+                </div>
+            </div>
+
+            <!-- FLOW TRACKER BOARD -->
+            <div class="row g-4 mb-5">
+                <div class="col-12">
+                     <div class="card border-0 shadow-lg p-5" style="border-radius: 40px; background: white;">
+                         <div class="table-responsive">
+                            <table class="table table-hover align-middle custom-table mb-0">
+                                <thead class="bg-light text-muted small text-uppercase">
+                                    <tr>
+                                        <th class="px-4 py-3">Patient</th>
+                                        <th class="py-3 text-center">Current Station</th>
+                                        <th class="py-3">Workflow Progress</th>
+                                        <th class="px-4 text-end py-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-700">
+                                     <tr th:each="p : ${patients}" class="border-transparent">
+                                         <td class="px-4">
+                                             <div class="d-flex align-items-center gap-3">
+                                                 <div class="bg-primary text-white p-2 rounded-circle fw-900 text-center" 
+                                                      style="width: 32px; height: 32px; font-size: 0.7rem;" 
+                                                      th:text="${#strings.substring(p.name,0,1)}">A</div>
+                                                 <div>
+                                                     <span class="d-block" th:text="${p.name}">Patient Name</span>
+                                                     <small class="text-muted fw-600" th:text="${p.patientId}">PAT-001</small>
+                                                 </div>
+                                             </div>
+                                         </td>
+                                         <td class="text-center">
+                                             <span th:if="${p.status == 'QUEUE'}" class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 border border-secondary-subtle">RECEPTION</span>
+                                             <span th:if="${p.status == 'CONSULTING'}" class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 border border-primary-subtle">DOCTOR</span>
+                                             <span th:if="${p.status == 'LAB'}" class="badge bg-info-subtle text-info rounded-pill px-3 py-2 border border-info-subtle">LABORATORY</span>
+                                             <span th:if="${p.status == 'PHARMACY'}" class="badge bg-success-subtle text-success rounded-pill px-3 py-2 border border-success-subtle">PHARMACY</span>
+                                             <span th:if="${p.status == 'WARD'}" class="badge bg-warning-subtle text-warning rounded-pill px-3 py-2 border border-warning-subtle">WARD</span>
+                                             <span th:if="${p.status == 'BILLING'}" class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 border border-danger-subtle">BILLING</span>
+                                             <span th:if="${p.status == 'DISCHARGED'}" class="badge bg-light text-dark rounded-pill px-3 py-2 border">DISCHARGED</span>
+                                         </td>
+                                         <td>
+                                             <!-- Progress Bar -->
+                                             <div class="progress rounded-pill bg-light" style="height: 10px; min-width: 250px;">
+                                                 <div th:if="${p.status == 'QUEUE'}" class="progress-bar bg-secondary" style="width: 15%"></div>
+                                                 <div th:if="${p.status == 'CONSULTING'}" class="progress-bar bg-primary" style="width: 35% text-center"></div>
+                                                 <div th:if="${p.status == 'LAB'}" class="progress-bar bg-info" style="width: 50% text-center"></div>
+                                                 <div th:if="${p.status == 'PHARMACY'}" class="progress-bar bg-success" style="width: 65% text-center"></div>
+                                                 <div th:if="${p.status == 'WARD'}" class="progress-bar bg-warning" style="width: 80% text-center"></div>
+                                                 <div th:if="${p.status == 'BILLING'}" class="progress-bar bg-danger" style="width: 90% text-center"></div>
+                                                 <div th:if="${p.status == 'DISCHARGED'}" class="progress-bar bg-dark" style="width: 100%"></div>
+                                             </div>
+                                             <div class="d-flex justify-content-between mt-2">
+                                                 <small class="text-muted fw-700" style="font-size: 0.65rem;">START</small>
+                                                 <small class="text-muted fw-700" style="font-size: 0.65rem;">FINISH</small>
+                                             </div>
+                                         </td>
+                                         <td class="px-4 text-end">
+                                             <button class="btn btn-light btn-sm rounded-pill p-2"><i class="bi bi-eye"></i></button>
+                                         </td>
+                                     </tr>
+                                     <tr th:if="${#lists.isEmpty(patients)}">
+                                         <td colspan="4" class="text-center py-5 text-muted small">No active patients in flow.</td>
+                                     </tr>
+                                </tbody>
+                            </table>
+                         </div>
+                     </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

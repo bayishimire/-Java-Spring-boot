@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .lab-unified-view})}">
+        <div class="lab-unified-view">
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1">Laboratory Command Center</h2>
+                    <p class="text-muted fw-600">Analyze test requests and report clinical findings.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg p-5" style="border-radius: 40px; background: white;">
+                <h4 class="fw-900 mb-4">Pending Lab Tests (Incoming "Fish")</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle custom-table mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="px-4 py-3">Patient Name</th>
+                                <th class="py-3">Requested Test</th>
+                                <th class="py-3">From Doctor</th>
+                                <th class="px-4 text-end py-3">Record Results</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-700">
+                             <tr th:each="patient : ${patients}" class="border-transparent">
+                                 <td class="px-4">
+                                     <div class="d-flex align-items-center gap-3">
+                                         <div class="bg-vivid-purple text-white p-2 rounded-circle fw-900 text-center" 
+                                              style="width: 35px; height: 35px; background: #8b5cf6;" 
+                                              th:text="${#strings.substring(patient.name,0,1)}">L</div>
+                                         <span th:text="${patient.name}">Patient Name</span>
+                                     </div>
+                                 </td>
+                                 <td>
+                                     <span class="badge bg-purple-subtle text-purple border border-purple-subtle" 
+                                           style="background: #f5f3ff; color: #7c3aed;"
+                                           th:text="${patient.labTestRequest}">Blood Test</span>
+                                 </td>
+                                 <td th:text="${patient.assignedDoctor.startsWith('Dr.') ? patient.assignedDoctor : 'Dr. ' + patient.assignedDoctor}">Doctor Name</td>
+                                 <td class="px-4 text-end">
+                                     <button class="btn btn-primary rounded-pill px-4 btn-sm fw-800 shadow-sm"
+                                             data-bs-toggle="modal" th:attr="data-bs-target='#labModal'+${patient.id}">
+                                         <i class="bi bi-vial me-2"></i> Submit Result
+                                     </button>
+                                 </td>
+                             </tr>
+                             <tr th:if="${#lists.isEmpty(patients)}">
+                                 <td colspan="4" class="text-center py-5 text-muted opacity-50">No pending lab requests.</td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MODALS SECTION -->
+            <div th:each="patient : ${patients}">
+                <div class="modal fade text-start" th:id="'labModal'+${patient.id}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px;">
+                            <div class="modal-body p-5">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h3 class="fw-900 mb-0" th:text="${patient.name}">Patient Name</h3>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-700" th:text="${patient.labTestRequest}">Test Requested</span>
+                                </div>
+
+                                <div class="bg-light p-3 rounded-4 mb-4 small fw-700 text-muted" th:if="${patient.labResults}">
+                                    <div class="mb-2 text-uppercase letter-spacing-1">Previous Result History:</div>
+                                    <pre class="mb-0 text-dark" style="white-space: pre-wrap; font-family: inherit;" th:text="${patient.labResults}"></pre>
+                                </div>
+                                
+                                <form th:action="@{/lab/submit}" method="post" class="lab-submission-form">
+                                    <input type="hidden" name="id" th:value="${patient.id}">
+                                    
+                                    <div class="mb-2">
+                                        <label class="small fw-800 text-muted d-block mb-3">SPECIFIC TEST FINDINGS</label>
+                                        <div class="test-rows-container">
+                                            <div class="row g-2 mb-2 test-row">
+                                                <div class="col-5">
+                                                    <input type="text" name="testNames[]" class="form-control border-2 rounded-3 fw-600" placeholder="Test Name (e.g. Glucose)" required th:value="${patient.labTestRequest}">
+                                                </div>
+                                                <div class="col-5">
+                                                    <input type="text" name="testValues[]" class="form-control border-2 rounded-3 fw-600" placeholder="Result/Value" required>
+                                                </div>
+                                                <div class="col-2">
+                                                    <button type="button" class="btn btn-outline-danger w-100 rounded-3 border-2" onclick="removeLabRow(this)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-2 fw-800" onclick="addLabRow(this)">
+                                            <i class="bi bi-plus-circle me-1"></i> Add Another Parameter
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="form-check form-switch mb-4 mt-4">
+                                        <input class="form-check-input" type="checkbox" name="keepInLab" th:id="'keepInLab'+${patient.id}" role="switch">
+                                        <label class="form-check-label fw-700 small" th:for="'keepInLab'+${patient.id}">
+                                            More tests pending (Keep in lab queue)
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-900 shadow-sm mt-2">
+                                        FINALIZE & SYNC FINDINGS <i class="bi bi-cloud-arrow-up ms-2"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function addLabRow(btn) {
+                    const container = btn.closest('.modal-body').querySelector('.test-rows-container');
+                    const row = document.createElement('div');
+                    row.className = 'row g-2 mb-2 test-row';
+                    row.innerHTML = `
+                        <div class="col-5">
+                            <input type="text" name="testNames[]" class="form-control border-2 rounded-3 fw-600" placeholder="Parameter" required>
+                        </div>
+                        <div class="col-5">
+                            <input type="text" name="testValues[]" class="form-control border-2 rounded-3 fw-600" placeholder="Value" required>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-outline-danger w-100 rounded-3 border-2" onclick="removeLabRow(this)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                }
+
+                function removeLabRow(btn) {
+                    const container = btn.closest('.test-rows-container');
+                    const rows = container.querySelectorAll('.test-row');
+                    if (rows.length > 1) {
+                        btn.closest('.test-row').remove();
+                    } else {
+                        // Just clear inputs if it's the last row
+                        btn.closest('.test-row').querySelectorAll('input').forEach(input => input.value = '');
+                    }
+                }
+            </script>
+
+        </div>
+    </div>
+</body>
+</html>

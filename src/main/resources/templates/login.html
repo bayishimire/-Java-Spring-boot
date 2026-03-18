@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}">
+    <title>HMS Pro | Secure Login</title>
+</head>
+<body>
+    <div class="login-page-wrapper">
+        <nav th:replace="~{layout :: navbar}"></nav>
+
+        <div class="login-parallax-container">
+            <div class="glass-login-card">
+                <div class="login-brand">
+                    <div class="brand-icon">
+                        <i class="bi bi-hospital-fill"></i>
+                    </div>
+                    <h2>HMS<span>Pro</span></h2>
+                    <p>Clinical System Authentication</p>
+                </div>
+
+                <form th:action="@{/login}" method="post" class="advanced-form">
+                    <div th:if="${param.error}" class="login-error-toast">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Access Denied: Invalid Credentials
+                    </div>
+
+                    <div class="modern-input-group">
+                        <label>ID / Username</label>
+                        <div class="input-relative">
+                            <i class="bi bi-person-badge"></i>
+                            <input type="text" name="username" placeholder="Enter Staff ID" required autocomplete="off" />
+                        </div>
+                    </div>
+
+                    <div class="modern-input-group">
+                        <label>Password</label>
+                        <div class="input-relative">
+                            <i class="bi bi-shield-lock"></i>
+                            <input type="password" name="password" placeholder="••••••••" required />
+                        </div>
+                    </div>
+
+                    <div class="form-util">
+                        <label class="custom-check">
+                            <input type="checkbox">
+                            <span class="checkmark"></span> Remember me
+                        </label>
+                        <a href="#">Forgot Pass?</a>
+                    </div>
+
+                    <button type="submit" class="btn-advanced-login">
+                        Sign In <i class="bi bi-arrow-right-circle-fill ms-2"></i>
+                    </button>
+
+                    <div class="login-security-notice">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <span>End-to-End Encrypted Session</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <footer th:replace="~{layout :: footer}"></footer>
+    </div>
+</body>
+</html>

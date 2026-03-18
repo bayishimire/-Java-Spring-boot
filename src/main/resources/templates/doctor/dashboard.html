@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .doctor-unified-view})}">
+        <div class="doctor-unified-view">
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1">Clinical Command Center</h2>
+                    <p class="text-muted fw-600">Review assigned patients and manage consultation queues.</p>
+                </div>
+                <div class="d-flex gap-3">
+                     <button class="btn btn-outline-primary rounded-pill px-4 fw-800">
+                         <i class="bi bi-clock-history me-2"></i> Consultation History
+                     </button>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="stat-card-v2 border-0 shadow-sm">
+                        <i class="bi bi-person-video2 fs-2 text-primary opacity-50 mb-3 d-block"></i>
+                        <h6 class="text-muted fw-800 text-uppercase" style="font-size: 0.65rem;">Patients in Queue</h6>
+                        <h2 class="fw-900" th:text="${assignedPatientsCount}">0</h2>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill">Active Assignment</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 1: NEW ARRIVALS -->
+            <div class="card border-0 shadow-lg p-5 mb-5" style="border-radius: 40px; background: white;">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="fw-900 mb-0" th:text="${assignedPatientsCount > 0 ? 'New Incoming patients' : 'no have new patients'}">New Incoming "Fish"</h4>
+                    <span class="badge bg-danger rounded-pill px-3 py-2 fw-800" th:if="${assignedPatientsCount > 0}">
+                       <i class="bi bi-bell-fill me-1"></i> New Patient Arrived
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle custom-table mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="px-4 py-3">Patient Name</th>
+                                <th class="py-3">Reception Note</th>
+                                <th class="py-3">Time Arrived</th>
+                                <th class="px-4 text-end py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-700">
+                             <tr th:each="patient : ${patients}" th:if="${patient.status == 'QUEUE'}" class="border-transparent">
+                                 <td class="px-4">
+                                     <div class="d-flex align-items-center gap-3">
+                                         <div class="bg-info-subtle text-info p-2 rounded-circle fw-900" 
+                                              style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;" 
+                                              th:text="${#strings.substring(patient.name,0,1)}">P</div>
+                                         <span th:text="${patient.name}">Patient Name</span>
+                                     </div>
+                                 </td>
+                                 <td class="text-muted small fw-600" th:text="${patient.reasonForVisit}">Reason</td>
+                                 <td class="text-muted small" th:text="${#temporals.format(patient.createdAt, 'HH:mm')}">Time</td>
+                                 <td class="px-4 text-end">
+                                     <form th:action="@{/doctor/consultation/start}" method="post" style="display:inline;">
+                                         <input type="hidden" name="id" th:value="${patient.id}">
+                                         <button type="submit" class="btn btn-primary rounded-pill px-4 btn-sm fw-800 shadow-sm scale-hover">
+                                             <i class="bi bi-clipboard2-pulse me-2"></i> Open File
+                                         </button>
+                                     </form>
+                                 </td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION 2: ACTIVE CONSULTATIONS -->
+            <div class="card border-0 shadow-lg p-5" style="border-radius: 40px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);">
+                <h4 class="fw-900 mb-4">Current Active Consultations</h4>
+                <div class="row g-4">
+                    <div th:each="patient : ${patients}" th:if="${patient.status == 'CONSULTING'}" class="col-md-6">
+                        <div class="card border-0 shadow-sm p-4 rounded-4 bg-white border border-primary border-opacity-10">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="fw-900 mb-0" th:text="${patient.name}">Patient Name</h5>
+                                <span class="badge bg-info-subtle text-info rounded-pill px-3">In Progress</span>
+                            </div>
+                            <p class="text-muted small mb-3" th:text="|Reason: ${patient.reasonForVisit}|"></p>
+                            
+                            <div th:if="${patient.labResults}" class="bg-primary bg-opacity-10 p-3 rounded-4 mb-4 small border border-primary border-opacity-20">
+                                <div class="fw-800 text-primary small text-uppercase mb-2"><i class="bi bi-vial-fill me-1"></i> Lab Findings History:</div>
+                                <pre class="mb-0 text-dark fw-600" style="white-space: pre-wrap; font-family: inherit; font-size: 0.75rem;" th:text="${patient.labResults}"></pre>
+                            </div>
+                            
+                            <form th:action="@{/doctor/consultation/update}" method="post">
+                                <input type="hidden" name="id" th:value="${patient.id}">
+                                
+                                <label class="small fw-800 text-muted mb-2 text-uppercase ls-1">Clinical Findings & Notes</label>
+                                <textarea name="notes" class="form-control border-2 rounded-4 mb-3" rows="3" placeholder="Enter clinical assessment..."></textarea>
+                                
+                                <label class="small fw-800 text-muted mb-2 text-uppercase ls-1">Decision / Route</label>
+                                <div class="row g-2 mb-4">
+                                    <div class="col-12">
+                                        <select name="action" class="form-select border-2 rounded-4 fw-700 route-select-trigger" required onchange="handleRouteToggle(this)">
+                                            <option value="NORMAL">Normal Treatment (Discharge to Billing)</option>
+                                            <option value="LAB">Send to Laboratory</option>
+                                            <option value="PHARMACY">Send to Pharmacy (Prescribe)</option>
+                                            <option value="WARD">Admit to Ward</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <!-- Container for dynamic input/select -->
+                                        <div class="route-detail-container">
+                                            <input type="text" name="detail" class="form-control border-2 rounded-4 text-input" placeholder="Test Name / Medication">
+                                            <select name="detail" class="form-select border-2 rounded-4 fw-700 ward-select d-none" disabled>
+                                                <option value="" disabled selected>Select available ward...</option>
+                                                <option th:each="ward : ${wards}" th:value="${ward.name}" th:text="|${ward.name} (${ward.type}) - ${ward.capacity} Beds|">General Ward</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-900 shadow-sm scale-hover">
+                                    SUBMIT ASSESSMENT & ROUTE PATIENT <i class="bi bi-arrow-right-circle ms-2"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div th:if="${#lists.isEmpty(patients.?[status == 'CONSULTING'])}" class="col-12 text-center py-5">
+                        <p class="text-muted opacity-50 fw-600">Click "Open File" in the queue above to start a consultation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function handleRouteToggle(select) {
+                    const container = select.closest('form').querySelector('.route-detail-container');
+                    const textInput = container.querySelector('.text-input');
+                    const wardSelect = container.querySelector('.ward-select');
+                    
+                    if (select.value === 'WARD') {
+                        textInput.classList.add('d-none');
+                        textInput.disabled = true;
+                        
+                        wardSelect.classList.remove('d-none');
+                        wardSelect.disabled = false;
+                        wardSelect.required = true;
+                    } else {
+                        wardSelect.classList.add('d-none');
+                        wardSelect.disabled = true;
+                        wardSelect.required = false;
+                        
+                        textInput.classList.remove('d-none');
+                        textInput.disabled = false;
+                    }
+                }
+            </script>
+
+        </div>
+    </div>
+</body>
+</html>

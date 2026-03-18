@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .workflow-view})}">
+        <div class="workflow-view text-center py-5">
+            <div class="stat-card-v2 d-inline-block p-5" style="max-width: 600px;">
+                <i class="bi bi-gear-wide-connected display-1 text-primary mb-4 d-block"></i>
+                <h2 class="fw-900 mb-3">Module Integration in Progress</h2>
+                <p class="text-muted fw-600 mb-4">
+                    This automated workflow step is being linked to the hospital core database. 
+                    Real-time data synchronization will be active shortly.
+                </p>
+                <div class="progress mb-4" style="height: 10px; border-radius: 5px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                </div>
+                <a th:href="@{/receptionist/dashboard}" class="btn btn-primary rounded-pill px-5 fw-800">Return to Command Center</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

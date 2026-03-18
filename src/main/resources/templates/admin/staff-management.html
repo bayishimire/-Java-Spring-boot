@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+<div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .staff-management-view})}">
+    <div class="staff-management-view">
+
+        <style>
+            /* ===== PAGE HEADER ===== */
+            .page-header-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2.5rem;
+            }
+            .page-header-bar h2 {
+                font-weight: 900;
+                margin: 0;
+                font-size: 1.9rem;
+                letter-spacing: -0.5px;
+            }
+            .page-header-bar p { color: #64748b; margin: 0.25rem 0 0; font-weight: 600; }
+
+            /* ===== STAT PILLS ===== */
+            .role-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 12px;
+                border-radius: 999px;
+                font-size: 0.72rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .pill-ADMIN          { background: #ede9fe; color: #6d28d9; }
+            .pill-DOCTOR         { background: #dbeafe; color: #1d4ed8; }
+            .pill-RECEPTIONIST   { background: #d1fae5; color: #065f46; }
+            .pill-NURSE          { background: #fce7f3; color: #9d174d; }
+            .pill-LAB_TECHNICIAN { background: #ffedd5; color: #9a3412; }
+            .pill-PHARMACIST     { background: #dcfce7; color: #15803d; }
+            .pill-BILLING_STAFF  { background: #fef9c3; color: #854d0e; }
+            .pill-PATIENT        { background: #f1f5f9; color: #475569; }
+
+            /* ===== STAFF TABLE ===== */
+            .staff-table-card {
+                background: white;
+                border-radius: 28px;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+                overflow: hidden;
+            }
+            .staff-table-card table { margin: 0; }
+            .staff-table-card thead th {
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+                color: #64748b;
+                font-size: 0.7rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                padding: 1rem 1.5rem;
+            }
+            .staff-table-card tbody td {
+                padding: 1rem 1.5rem;
+                vertical-align: middle;
+                border-bottom: 1px solid #f1f5f9;
+                font-weight: 600;
+                font-size: 0.92rem;
+            }
+            .staff-table-card tbody tr:last-child td { border-bottom: none; }
+            .staff-table-card tbody tr:hover { background: #fafbff; transition: 0.2s; }
+
+            .avatar-circle {
+                width: 40px; height: 40px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                display: flex; align-items: center; justify-content: center;
+                font-weight: 900; font-size: 1rem;
+                flex-shrink: 0;
+            }
+
+            /* ===== MODAL FORM ===== */
+            .modal-content {
+                border: none;
+                border-radius: 24px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+                overflow: hidden;
+            }
+            .modal-header-custom {
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                padding: 2rem 2.5rem;
+                border: none;
+            }
+            .modal-header-custom h4 {
+                color: white; font-weight: 900; margin: 0; font-size: 1.4rem;
+            }
+            .modal-header-custom p { color: rgba(255,255,255,0.55); margin: 0.3rem 0 0; font-size: 0.85rem; }
+            .modal-header-custom .btn-close {
+                filter: invert(1) opacity(0.5);
+            }
+            .modal-body { padding: 2rem 2.5rem; background: #f8fafc; }
+            .modal-footer { border: none; padding: 1rem 2.5rem 2rem; background: #f8fafc; }
+
+            /* Form field groups */
+            .form-group-custom {
+                margin-bottom: 1.25rem;
+            }
+            .form-group-custom label {
+                font-weight: 800;
+                font-size: 0.78rem;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: #334155;
+                margin-bottom: 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .form-group-custom label i { color: #6366f1; font-size: 0.95rem; }
+
+            .input-icon-wrapper {
+                position: relative;
+            }
+            .input-icon-wrapper .field-icon {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+                font-size: 1rem;
+                z-index: 2;
+            }
+            .input-icon-wrapper input,
+            .input-icon-wrapper select {
+                padding-left: 2.6rem;
+            }
+
+            .form-control-custom, .form-select-custom {
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.75rem 1rem;
+                font-family: 'Outfit', sans-serif;
+                font-weight: 600;
+                font-size: 0.92rem;
+                width: 100%;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                background: white;
+                color: #1e293b;
+            }
+            .form-control-custom:focus, .form-select-custom:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+                outline: none;
+            }
+            .form-control-custom::placeholder { color: #cbd5e1; font-weight: 500; }
+
+            .btn-add-staff {
+                background: linear-gradient(135deg, #6366f1, #4f46e5);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                padding: 0.75rem 2rem;
+                font-weight: 800;
+                font-size: 0.92rem;
+                font-family: 'Outfit', sans-serif;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: 0.2s;
+                cursor: pointer;
+            }
+            .btn-add-staff:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(99,102,241,0.35);
+            }
+
+            .btn-open-modal {
+                background: linear-gradient(135deg, #6366f1, #4f46e5);
+                color: white;
+                border: none;
+                border-radius: 14px;
+                padding: 0.8rem 1.8rem;
+                font-weight: 800;
+                font-size: 0.9rem;
+                font-family: 'Outfit', sans-serif;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                transition: 0.2s;
+                box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+            }
+            .btn-open-modal:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+            }
+
+            /* password strength indicator */
+            .password-hint {
+                font-size: 0.72rem;
+                color: #94a3b8;
+                font-weight: 600;
+                margin-top: 5px;
+            }
+
+            /* section divider in modal */
+            .form-section-label {
+                font-size: 0.65rem;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #94a3b8;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 8px;
+                margin-bottom: 1rem;
+                margin-top: 1.5rem;
+            }
+            .form-section-label:first-of-type { margin-top: 0; }
+
+            /* Empty state */
+            .empty-state {
+                text-align: center;
+                padding: 4rem 2rem;
+                color: #94a3b8;
+            }
+            .empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.3; }
+
+            /* Delete btn */
+            .btn-delete-mini {
+                border: none;
+                background: #fee2e2;
+                color: #dc2626;
+                border-radius: 8px;
+                padding: 5px 10px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: 0.2s;
+            }
+            .btn-delete-mini:hover { background: #dc2626; color: white; }
+
+            /* success toast banner */
+            .success-banner {
+                background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+                border: 1.5px solid #34d399;
+                border-radius: 16px;
+                padding: 1rem 1.5rem;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 700;
+                color: #065f46;
+                font-size: 0.9rem;
+            }
+            .error-banner {
+                background: linear-gradient(135deg, #fee2e2, #fecaca);
+                border: 1.5px solid #f87171;
+                border-radius: 16px;
+                padding: 1rem 1.5rem;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 700;
+                color: #7f1d1d;
+                font-size: 0.9rem;
+            }
+        </style>
+
+        <!-- ===== PAGE HEADER ===== -->
+        <div class="page-header-bar">
+            <div>
+                <h2><i class="bi bi-people-fill me-2 text-primary"></i>Staff Management</h2>
+                <p>Manage all hospital staff accounts and system access roles.</p>
+            </div>
+            <button type="button" class="btn-open-modal shadow-lg" data-bs-toggle="modal" data-bs-target="#addStaffModal" style="border: 2px solid #818cf8; padding: 0.9rem 2rem; font-size: 0.95rem;">
+                <i class="bi bi-person-plus-fill fs-5"></i> Register New Staff
+            </button>
+        </div>
+
+        <!-- ===== SUMMARY STATS ===== -->
+
+        <!-- ===== SUMMARY STATS ===== -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card-v2 text-center p-4">
+                    <i class="bi bi-people fs-2 text-primary d-block mb-2" style="opacity:0.7;"></i>
+                    <h4 class="fw-900 mb-0" th:text="${staffList.size()}">0</h4>
+                    <small class="text-muted fw-700">Total Staff</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card-v2 text-center p-4">
+                    <i class="bi bi-heart-pulse fs-2 text-danger d-block mb-2" style="opacity:0.7;"></i>
+                    <h4 class="fw-900 mb-0" th:text="${staffList.?[role != null && role.name == 'DOCTOR'].size()}">0</h4>
+                    <small class="text-muted fw-700">Doctors</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card-v2 text-center p-4">
+                    <i class="bi bi-journals fs-2 text-info d-block mb-2" style="opacity:0.7;"></i>
+                    <h4 class="fw-900 mb-0" th:text="${staffList.?[role != null && role.name == 'NURSE'].size()}">0</h4>
+                    <small class="text-muted fw-700">Nurses</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card-v2 text-center p-4">
+                    <i class="bi bi-shield-lock fs-2 text-warning d-block mb-2" style="opacity:0.7;"></i>
+                    <h4 class="fw-900 mb-0" th:text="${staffList.?[role != null && role.name == 'ADMIN'].size()}">0</h4>
+                    <small class="text-muted fw-700">Admins</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== STAFF TABLE ===== -->
+        <div class="staff-table-card">
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="fw-900 mb-0">All Accounts</h5>
+                    <small class="text-muted fw-600" th:text="${staffList.size() + ' records found'}">0 records</small>
+                </div>
+                <input type="text" class="form-control rounded-pill border-0 bg-light fw-600" id="staffSearch"
+                       placeholder="🔍  Search by name or username..." style="max-width: 280px; font-family: 'Outfit', sans-serif;"
+                       onkeyup="filterTable()">
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mb-0" id="staffTable">
+                    <thead>
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Staff ID</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${staffList}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle" th:text="${#strings.substring(user.fullName != null ? user.fullName : user.username, 0, 1).toUpperCase()}">A</div>
+                                    <div>
+                                        <div class="fw-800" th:text="${user.fullName != null ? user.fullName : '—'}">Full Name</div>
+                                        <small class="text-muted fw-600" style="font-size:0.75rem;">Active Account</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-700 text-muted" th:text="${user.username}">username</span>
+                            </td>
+                            <td>
+                                <span class="role-pill" th:if="${user.role != null}"
+                                      th:classappend="'pill-' + ${user.role.name}"
+                                      th:text="${user.role.name.replace('_', ' ')}">Role</span>
+                                <span class="text-muted italic" th:if="${user.role == null}">No Role</span>
+                            </td>
+                            <td>
+                                <code class="fw-700 text-muted" style="font-size:0.78rem;" th:text="'#' + ${user.id}">ID</code>
+                            </td>
+                            <td class="text-end">
+                                <form th:action="@{/admin/staff/delete/{id}(id=${user.id})}" method="post" class="d-inline"
+                                      onsubmit="return confirm('Remove this staff account permanently?')">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="btn-delete-mini">
+                                        <i class="bi bi-trash3"></i> Remove
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-primary fw-700 rounded-pill px-3 ms-2"
+                                        data-bs-toggle="modal" th:data-bs-target="'#editStaffModal' + ${user.id}">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Empty State -->
+                        <tr th:if="${staffList.isEmpty()}">
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="bi bi-people"></i>
+                                    <p class="fw-800 mb-1" style="color:#334155;">No Staff Accounts Found</p>
+                                    <small>Click "Add New Staff" to create the first account.</small>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===================================================================
+     ADD STAFF MODAL
+=================================================================== -->
+<div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header-custom d-flex justify-content-between align-items-start">
+                <div>
+                    <h4><i class="bi bi-person-plus-fill me-2" style="color:#a5b4fc;"></i>New Staff Account</h4>
+                    <p>Fill in the details below to register a new hospital staff member.</p>
+                </div>
+                <button type="button" class="btn-close mt-1" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Form -->
+            <form th:action="@{/admin/staff/add}" method="post" autocomplete="off" enctype="multipart/form-data">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="modal-body">
+
+                    <!-- Section: Personal Info -->
+                    <div class="form-section-label"><i class="bi bi-person me-1"></i>Personal Information</div>
+
+                    <div class="form-group-custom">
+                        <label for="fullName"><i class="bi bi-person-badge-fill"></i> Full Name</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-person field-icon"></i>
+                            <input type="text" id="fullName" name="fullName" class="form-control-custom"
+                                   placeholder="e.g. Dr. James Mureithi" required minlength="3">
+                        </div>
+                    </div>
+
+                    <!-- Section: Login Credentials -->
+                    <div class="form-section-label"><i class="bi bi-shield-lock me-1"></i>Login Credentials</div>
+
+                    <div class="form-group-custom">
+                        <label for="username"><i class="bi bi-at"></i> Username</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-at field-icon"></i>
+                            <input type="text" id="username" name="username" class="form-control-custom"
+                                   placeholder="e.g. dr.james" required minlength="4"
+                                   pattern="[a-zA-Z0-9._\-]+" title="Letters, numbers, dots, underscores only">
+                        </div>
+                    </div>
+
+                    <div class="form-group-custom">
+                        <label for="password"><i class="bi bi-key-fill"></i> Temporary Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-lock field-icon"></i>
+                            <input type="password" id="password" name="password" class="form-control-custom"
+                                   th:placeholder="${systemSettings.get('strongPasswords') ? 'Min. 6 characters' : 'Enter a password'}" 
+                                   required th:minlength="${systemSettings.get('strongPasswords') ? '6' : '1'}">
+                        </div>
+                        <p class="password-hint"><i class="bi bi-info-circle me-1"></i>
+                            <span th:if="${systemSettings.get('strongPasswords')}" class="text-primary-emphasis">Strong Passwords Required (Min. 6)</span>
+                            <span th:unless="${systemSettings.get('strongPasswords')}">Basic Security Active (No minimum length)</span>
+                        </p>
+                    </div>
+
+                    <!-- Section: Role -->
+                    <div class="form-section-label"><i class="bi bi-grid me-1"></i>System Role &amp; Access</div>
+
+                    <div class="form-group-custom">
+                        <label for="role"><i class="bi bi-shield-check"></i> Assign Role</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-chevron-expand field-icon"></i>
+                            <select id="role" name="role" class="form-control-custom form-select-custom" required>
+                                <option value="" disabled selected>— Select a role —</option>
+                                <option th:each="r : ${roles}" th:value="${r.name}" th:text="${r.name.replace('_', ' ')}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group-custom mt-4">
+                        <label for="picture"><i class="bi bi-camera-fill"></i> Profile Photo</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-image field-icon"></i>
+                            <input type="file" id="picture" name="picture" class="form-control-custom" accept="image/*">
+                        </div>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Optional. Recommended size: 400x400px</small>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-light fw-700 rounded-pill px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn-add-staff">
+                        <i class="bi bi-person-check-fill"></i> Create Account
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================
+     EDIT STAFF MODAL (PER USER)
+=================================================================== -->
+<th:block th:each="user : ${staffList}">
+<div class="modal fade" th:id="'editStaffModal' + ${user.id}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header-custom d-flex justify-content-between align-items-start">
+                <div>
+                    <h4><i class="bi bi-pencil-square me-2" style="color:#a5b4fc;"></i>Edit Staff</h4>
+                    <p th:text="'Update details for ' + ${user.username}"></p>
+                </div>
+                <button type="button" class="btn-close mt-1" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Form -->
+            <form th:action="@{/admin/staff/edit}" method="post" autocomplete="off">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="id" th:value="${user.id}"/>
+
+                <div class="modal-body">
+
+                    <div class="form-section-label"><i class="bi bi-person me-1"></i>Personal Information</div>
+
+                    <div class="form-group-custom">
+                        <label><i class="bi bi-person-badge-fill"></i> Full Name</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-person field-icon"></i>
+                            <input type="text" name="fullName" class="form-control-custom"
+                                   th:value="${user.fullName}" required minlength="3">
+                        </div>
+                    </div>
+
+                    <div class="form-section-label"><i class="bi bi-grid me-1"></i>System Role &amp; Access</div>
+
+                    <div class="form-group-custom">
+                        <label><i class="bi bi-shield-check"></i> Assign Role</label>
+                        <div class="input-icon-wrapper">
+                            <i class="bi bi-chevron-expand field-icon"></i>
+                            <select name="role" class="form-control-custom form-select-custom" required>
+                                <option th:each="r : ${roles}" th:value="${r.name}" 
+                                        th:text="${r.name.replace('_', ' ')}"
+                                        th:selected="${user.role != null && user.role.name == r.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-light fw-700 rounded-pill px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn-add-staff">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+</th:block>
+
+<script>
+    // Table live search
+    function filterTable() {
+        const q = document.getElementById('staffSearch').value.toLowerCase();
+        document.querySelectorAll('#staffTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+
+    // Auto-dismiss flash banner
+    window.addEventListener('DOMContentLoaded', () => {
+        const banner = document.getElementById('flash-banner');
+        if (banner) {
+            setTimeout(() => {
+                banner.style.transition = 'opacity 0.5s, transform 0.5s';
+                banner.style.opacity = '0';
+                banner.style.transform = 'translateY(-10px)';
+                setTimeout(() => banner.remove(), 500);
+            }, 4000);
+        }
+
+        // Auto-open Add Staff modal if requested by URL action parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'add') {
+            const addModalElement = document.getElementById('addStaffModal');
+            if (addModalElement) {
+                const addModal = new bootstrap.Modal(addModalElement);
+                addModal.show();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

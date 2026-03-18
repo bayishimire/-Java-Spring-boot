@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="dashboard_head">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMS Pro | System Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f8fafc;
+            margin: 0;
+        }
+
+        /* Main Header Area */
+        .dashboard-main-header {
+            background: #111827;
+            color: white;
+            padding: 1rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand h3 {
+            font-weight: 900;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header-brand span {
+            color: var(--primary-color);
+        }
+
+        /* Sub-Header Navigation */
+        .dashboard-sub-navbar {
+            background: white;
+            padding: 0 4rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sub-nav-link {
+            padding: 1.2rem 0;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+
+        .sub-nav-link:hover,
+        .sub-nav-link.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .sub-nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .dashboard-body {
+            padding: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stat-card-v2 {
+            background: white;
+            padding: 2.2rem;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            border: 1px solid #f1f5f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:fragment="dashboard_structure(content)">
+        <!-- Top Main Header -->
+        <header class="dashboard-main-header">
+            <div class="header-brand">
+                <h3>HMS<span>Pro</span></h3>
+            </div>
+            <div class="user-info-bar d-flex align-items-center gap-4">
+                
+                <!-- Notification Bell for Doctors/Nurses -->
+                <div sec:authorize="hasAnyRole('ROLE_DOCTOR','ROLE_NURSE')" class="position-relative">
+                    <button class="border-0 bg-transparent text-white p-0" id="notification-bell">
+                        <i class="bi bi-bell-fill fs-4 opacity-75 hover-opacity-100"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                            <th:block th:text="${assignedPatientsCount ?: '0'}">0</th:block>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- ADVANCED ACCOUNT DROPDOWN -->
+                <div class="dropdown">
+                    <button class="profile-angle-btn d-flex align-items-center gap-2 border-0 bg-transparent p-0" data-bs-toggle="dropdown">
+                        <div class="profile-avatar text-white" style="width: 38px; height: 38px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1);">
+                            <img th:if="${currentUser != null && currentUser.profilePicture != null}" 
+                                 th:src="@{'/uploads/' + ${currentUser.profilePicture}}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                            <i th:unless="${currentUser != null && currentUser.profilePicture != null}" class="bi bi-person-circle fs-3"></i>
+                        </div>
+                        <div class="profile-info d-none d-sm-block text-start">
+                            <span class="d-block fw-800 text-white lh-1" style="font-size: 0.75rem;" 
+                                  th:text="${currentUser != null ? currentUser.fullName : 'Identity'}">Staff Name</span>
+                            <span class="badge-role-mini text-primary-subtle fw-800 text-uppercase" style="font-size: 0.6rem;" 
+                                  sec:authentication="principal.authorities">Role</span>
+                        </div>
+                        <i class="bi bi-chevron-down text-white fs-xs opacity-50 ms-1"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 p-2" style="border-radius: 12px; min-width: 220px;">
+                        <li class="px-3 py-2 border-bottom mb-2">
+                            <small class="text-muted text-uppercase fw-800" style="font-size: 0.6rem; letter-spacing: 0.5px;">Account Control</small>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-3 py-2 fw-700" th:href="@{/profile}"><i class="bi bi-person-gear me-2 text-primary"></i>My Security Profile</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="dropdown-item rounded-3 py-2 text-danger fw-700 w-100">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out Securely
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Role-Specific Sub-Header Navigation -->
+        <nav class="dashboard-sub-navbar">
+            
+            <!-- ADMIN WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_ADMIN')">
+                <a th:href="@{/admin/dashboard}" class="sub-nav-link" th:classappend="${requestURI == '/admin/dashboard'} ? 'active'"><i class="bi bi-grid-1x2"></i> System Overview</a>
+                <a th:href="@{/admin/staff}" class="sub-nav-link" th:classappend="${requestURI != null and requestURI.startsWith('/admin/staff')} ? 'active'"><i class="bi bi-people"></i> Staff Management</a>
+                <a th:href="@{/admin/wards}" class="sub-nav-link" th:classappend="${requestURI == '/admin/wards'} ? 'active'"><i class="bi bi-door-open"></i> Manage Wards</a>
+                <a th:href="@{/admin/reports}" class="sub-nav-link"><i class="bi bi-graph-up-arrow"></i> Hospital Analytics</a>
+                <a th:href="@{/admin/settings}" class="sub-nav-link"><i class="bi bi-gear"></i> System Settings</a>
+            </th:block>
+
+            <!-- DOCTOR WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_DOCTOR')">
+                <a th:href="@{/doctor/dashboard}" class="sub-nav-link active"><i class="bi bi-clipboard-pulse"></i> Clinical Queue</a>
+                <a th:href="@{/doctor/appointments}" class="sub-nav-link"><i class="bi bi-calendar-check"></i> Consultations</a>
+                <a th:href="@{/doctor/prescriptions}" class="sub-nav-link"><i class="bi bi-capsule"></i> Prescriptions</a>
+                <a th:href="@{/clinical-data}" class="sub-nav-link"><i class="bi bi-folder2-open"></i> Patient Records</a>
+            </th:block>
+
+            <!-- RECEPTIONIST WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_RECEPTIONIST')">
+                <a th:href="@{/receptionist/dashboard}" class="sub-nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a th:href="@{/receptionist/arrival}" class="sub-nav-link"><i class="bi bi-person-plus"></i> Patient Arrival</a>
+                <a th:href="@{/receptionist/flow}" class="sub-nav-link"><i class="bi bi-shuffle"></i> Patient Flow</a>
+                <a th:href="@{/receptionist/payment-check}" class="sub-nav-link"><i class="bi bi-wallet2"></i> Payment Status</a>
+                <a th:href="@{/receptionist/assign-doctor}" class="sub-nav-link"><i class="bi bi-person-badge"></i> Assignments</a>
+                <a th:href="@{/receptionist/receipt}" class="sub-nav-link"><i class="bi bi-printer"></i> Print Fish</a>
+            </th:block>
+
+            <!-- NURSE WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_NURSE')">
+                <a th:href="@{/nurse/dashboard}" class="sub-nav-link" th:classappend="${requestURI == '/nurse/dashboard'} ? 'active'"><i class="bi bi-activity"></i> Ward Status</a>
+                <a th:href="@{/nurse/vitals}" class="sub-nav-link" th:classappend="${requestURI == '/nurse/vitals'} ? 'active'"><i class="bi bi-thermometer-half"></i> Vital Signs</a>
+                <a th:href="@{/nurse/medication}" class="sub-nav-link" th:classappend="${requestURI == '/nurse/medication'} ? 'active'"><i class="bi bi-droplet-half"></i> Treatment Plan</a>
+            </th:block>
+
+            <!-- LAB TECHNICIAN WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_LAB_TECHNICIAN')">
+                <a th:href="@{/lab_technician/dashboard}" class="sub-nav-link active"><i class="bi bi-vial-fill"></i> Lab Queue</a>
+                <a th:href="@{/lab/pending}" class="sub-nav-link"><i class="bi bi-hourglass-split"></i> Pending Tests</a>
+                <a th:href="@{/lab/results}" class="sub-nav-link"><i class="bi bi-file-earmark-medical"></i> Lab Results</a>
+            </th:block>
+
+            <!-- PHARMACIST WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_PHARMACIST')">
+                <a th:href="@{/pharmacist/dashboard}" class="sub-nav-link active"><i class="bi bi-box-seam"></i> Inventory</a>
+                <a th:href="@{/pharmacist/prescriptions}" class="sub-nav-link"><i class="bi bi-prescription2"></i> Dispensing</a>
+                <a th:href="@{/pharmacist/orders}" class="sub-nav-link"><i class="bi bi-cart-check"></i> Stock Orders</a>
+            </th:block>
+
+            <!-- BILLING STAFF WORKFLOW -->
+            <th:block sec:authorize="hasRole('ROLE_BILLING_STAFF')">
+                <a th:href="@{/billing_staff/dashboard}" class="sub-nav-link active"><i class="bi bi-cash-stack"></i> Accounts</a>
+                <a th:href="@{/billing/invoices}" class="sub-nav-link"><i class="bi bi-receipt"></i> Invoices</a>
+                <a th:href="@{/billing/reports}" class="sub-nav-link"><i class="bi bi-file-bar-graph"></i> Revenue</a>
+            </th:block>
+
+        </nav>
+
+        <!-- Global Action Feedback (Auto-dismissing) -->
+        <div class="container-fluid px-5 pt-3" id="alert-container">
+            <div th:if="${success}" class="alert alert-success rounded-4 border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-0" id="global-alert">
+                <i class="bi bi-check-circle-fill fs-4"></i>
+                <div>
+                     <h6 class="mb-0 fw-800" th:text="${successMsg != null ? successMsg : 'Action Successful'}">Action Successful</h6>
+                     <small class="opacity-75" th:if="${successMsg == null}">Your changes have been securely synchronized with the system.</small>
+                </div>
+            </div>
+            <div th:if="${error}" class="alert alert-danger rounded-4 border-0 shadow-sm d-flex align-items-center gap-3 p-4 mb-0" id="global-alert">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                <div>
+                     <h6 class="mb-0 fw-800">System Notice</h6>
+                     <small class="opacity-75" th:text="${error}">An error occurred during your request.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Body -->
+        <main class="dashboard-body">
+            <div th:replace="${content}"></div>
+        </main>
+
+        <!-- Footer -->
+        <div th:replace="~{footer :: footer}"></div>
+
+        <!-- Bootstrap JS Bundle (Required for Dropdowns) -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Auto-dismiss alerts after 3 seconds -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const alert = document.getElementById('global-alert');
+                if (alert) {
+                    setTimeout(() => {
+                        alert.style.transition = 'all 0.5s ease-out';
+                        alert.style.opacity = '0';
+                        alert.style.transform = 'translateY(-20px)';
+                        setTimeout(() => alert.remove(), 500);
+                    }, 3000); // 3 seconds
+                }
+            });
+        </script>
+    </div>
+</body>
+
+</html>

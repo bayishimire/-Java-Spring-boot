@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{layout :: head}"></head>
+
+<body>
+    <div th:replace="~{layout :: main_structure(~{:: .home-content})}">
+        <div class="home-content">
+            <!-- ═══ HERO SECTION ════════════════════════════════════════════════ -->
+            <main class="hero">
+                <div class="hero-content">
+                    <span
+                        style="color: var(--primary-color-dark); font-weight: 00; text-transform: uppercase; letter-spacing: 1px;">
+                        The Future of Hospital Management
+                    </span>
+                  <h1 class="display-3 fw-600 mt-2 mb-4">
+    <b>Transforming Healthcare with Precision, Efficiency, and Innovation.</b>
+</h1>
+                    <p class="lead mb-5 opacity-79">
+                        MediCare+ is a unified digital ecosystem designed for doctors, patients, and administrators.
+                        Streamline your hospital workflow with our next-generation platform.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a th:href="@{/dashboard}" class="btn-primary">Get Started</a>
+                        <a href="#" class="btn-primary"
+                            style="background: var(--white); color: var(--primary-color); border: 1px solid #dbeafe;">Explore
+                            Portal</a>
+                    </div>
+                </div>
+                <div class="hero-image glass p-0 border-0">
+                    <img th:src="@{/images/hospital_hero_new.png}" alt="Advanced Hospital System"
+                        style="width: 100%; border-radius: 40px; box-shadow: 0 40px 100px rgba(0,0,0,0.1);" />
+                </div>
+            </main>
+
+            <!-- ═══ UPGRADE CTA SECTION (FOOTER THEME) ══════════════════════════ -->
+            <section class="container py-5 my-5">
+                <div class="cta-footer-theme-box bg-dark text-white p-5 text-center" style="border-radius: 50px;">
+                    <h1 class="display-4 fw-900 mb-3 text-white">Ready to upgrade your hospital?</h1>
+                    <p class="lead mb-5 mx-auto text-white-50" style="max-width: 800px;">
+                        Join thousands of healthcare professionals who have streamlined their workflow with HMS Pro.
+                        A secure, role-based, and highly integrated solution for modern medicine.
+                    </p>
+                    <a th:href="@{/dashboard}" class="btn btn-premium btn-light text-primary py-3 px-5 rounded-pill fw-800">
+                        Access Staff Portal Now <i class="bi bi-box-arrow-in-right ms-2"></i>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+
+</html>

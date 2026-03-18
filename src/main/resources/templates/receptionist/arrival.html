@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .premium-registration-view})}">
+        <div class="premium-registration-view py-3">
+
+            <!-- Breadcrumb Navigation -->
+            
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card border-0 shadow-lg p-5 overflow-hidden"
+                        style="border-radius: 40px; background: white;">
+
+                        <!-- Header Section -->
+                        <div class="d-flex align-items-center justify-content-between mb-5">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="bg-primary text-white p-3 rounded-4 shadow-sm">
+                                    <i class="bi bi-person-plus-fill fs-3"></i>
+                                </div>
+                                <div>
+                                    <h2 class="fw-900 mb-0">Create "Fish" Record</h2>
+                                    <p class="text-muted fw-600 mb-0 mt-1">Capture clinical arrivals and route to
+                                        physicians instantly.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/receptionist/register}" method="post">
+
+                            <!-- SECTION 1: PERSONAL DEMOGRAPHICS -->
+                            <div class="row g-4 mb-5">
+                                <div class="col-12 border-bottom pb-2 mb-3">
+                                    <h6 class="fw-900 text-uppercase text-primary small ls-1"><i
+                                            class="bi bi-person-lines-fill me-2"></i> 1. Personal Demographics</h6>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="form-floating-custom mb-3">
+                                        <div class="input-group input-group-lg border-2 rounded-4 overflow-hidden">
+                                            <span class="input-group-text bg-white border-0 px-4 text-muted"><i
+                                                    class="bi bi-person"></i></span>
+                                            <input type="text" name="name" class="form-control border-0 bg-white"
+                                                placeholder="Patient Full Name" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="input-group input-group-lg border-2 rounded-4 overflow-hidden">
+                                        <span class="input-group-text bg-white border-0 px-3 text-muted"><i
+                                                class="bi bi-calendar-event"></i></span>
+                                        <input type="number" name="age" class="form-control border-0 bg-white"
+                                            placeholder="Age" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group input-group-lg border-2 rounded-4 overflow-hidden">
+                                        <span class="input-group-text bg-white border-0 px-3 text-muted"><i
+                                                class="bi bi-gender-ambiguous"></i></span>
+                                        <select name="gender" class="form-select border-0 bg-white fw-700" required>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 2: CONTACT & CLINICAL REASON -->
+                            <div class="row g-4 mb-5">
+                                <div class="col-12 border-bottom pb-2 mb-3">
+                                    <h6 class="fw-900 text-uppercase text-primary small ls-1"><i
+                                            class="bi bi-clipboard2-pulse me-2"></i> 2. Contact & Clinical Status</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group input-group-lg border-2 rounded-4 overflow-hidden">
+                                        <span class="input-group-text bg-white border-0 px-4 text-muted"><i
+                                                class="bi bi-telephone"></i></span>
+                                        <input type="text" name="contactInfo" class="form-control border-0 bg-white"
+                                            placeholder="Contact Phone or Email" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group input-group-lg border-2 rounded-4 overflow-hidden">
+                                        <span class="input-group-text bg-white border-0 px-4 text-muted"><i
+                                                class="bi bi-chat-text"></i></span>
+                                        <input type="text" name="reasonForVisit" class="form-control border-0 bg-white"
+                                            placeholder="Reason for Clinical Visit" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 3: AUTOMATIC ASSIGNMENT (THE FISH HOOK) -->
+                            <div class="row g-4 pt-3">
+                                <div class="col-12 border-bottom pb-2 mb-3">
+                                    <h6 class="fw-900 text-uppercase text-primary small ls-1"><i
+                                            class="bi bi-person-badge-fill me-2"></i> 3. Clinical Routing (Assigned
+                                        Doctor)</h6>
+                                </div>
+                                <div class="col-12">
+                                    <div class="p-5 rounded-4 border border-primary border-opacity-25"
+                                        style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <label class="fw-800 text-primary mb-2 d-block">CHOOSE PHYSICIAN FOR
+                                                    CONSULTATION</label>
+                                                <select name="doctorName"
+                                                    class="form-select form-select-lg border-0 bg-transparent fw-900 fs-3 p-0"
+                                                    required>
+                                                    <option value="">Select an available Doctor...</option>
+                                                    <option th:each="doc : ${doctors}" th:value="${doc.fullName}"
+                                                        th:text="|Dr. ${doc.fullName} (Ready to Consult)|">
+                                                        Dr. House
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 text-end d-none d-md-block">
+                                                <i class="bi bi-person-workspace display-4 text-primary opacity-25"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACTIONS -->
+                            <div class="col-12 mt-5 pt-4 d-flex justify-content-between align-items-center">
+                                <button type="reset" class="btn btn-light-hover rounded-pill px-5 fw-800 border-0">
+                                    <i class="bi bi-trash3 me-2"></i> Reset
+                                </button>
+                                <button type="submit"
+                                    class="btn btn-primary rounded-pill px-5 py-4 fw-900 shadow-lg scale-hover"
+                                    style="font-size: 1.1rem; min-width: 300px;">
+                                    Finalize Registration & Generate Fish <i
+                                        class="bi bi-arrow-right-circle-fill ms-3 fs-5"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

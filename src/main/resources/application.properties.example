@@ -1,0 +1,15 @@
+spring.application.name=hospital-system
+server.port=8000
+
+# Database Configuration (Placeholder)
+spring.datasource.url=jdbc:mysql://localhost:3306/hospital?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA/Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Real-time UI Updates
+spring.thymeleaf.cache=false

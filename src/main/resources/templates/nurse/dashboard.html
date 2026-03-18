@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<style>
+    .log-timeline {
+        border-left: 2px solid #e2e8f0;
+        margin-left: 10px;
+        padding-left: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .log-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    .log-item::before {
+        content: '';
+        position: absolute;
+        left: -26px;
+        top: 5px;
+        width: 10px;
+        height: 10px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+</style>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .nurse-dashboard-view})}">
+        <div class="nurse-dashboard-view">
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1">Ward Care & Monitoring</h2>
+                    <p class="text-muted fw-600">Track admitted patients, manage bed assignments, and record clinical observations.</p>
+                </div>
+                <div class="badge bg-primary-subtle text-primary rounded-pill px-4 py-2 fw-800 border border-primary border-opacity-10">
+                    <i class="bi bi-person-pulse me-2"></i> Admitted Patients: <span th:text="${#lists.size(patients)}">0</span>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div th:each="patient : ${patients}" class="col-xl-6">
+                    <div class="card border-0 shadow-lg p-4 h-100" style="border-radius: 35px; background: white;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary text-white p-3 rounded-4 shadow-sm">
+                                    <i class="bi bi-person-bounding-box fs-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="fw-900 mb-0" th:text="${patient.name}">Patient Name</h4>
+                                    <span class="badge bg-light text-muted fw-700" th:text="${patient.wardName ?: 'Awaiting Ward Assignment'}">General Ward</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block small fw-800 text-muted text-uppercase ls-1 mb-1">Assigned Bed</span>
+                                <h4 class="fw-900 text-primary mb-0" th:text="${patient.bedNumber ?: 'UNASSIGNED'}">B-102</h4>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-800 btn-sm shadow-sm" 
+                                        data-bs-toggle="modal" th:attr="data-bs-target='#bedModal' + ${patient.id}">
+                                    <i class="bi bi-door-closed me-2"></i> Update Bed
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-outline-primary w-100 rounded-pill py-2 fw-800 btn-sm shadow-sm"
+                                        data-bs-toggle="modal" th:attr="data-bs-target='#finalizeModal' + ${patient.id}">
+                                    <i class="bi bi-check2-all me-2"></i> Finalize Care
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Care Logs Section -->
+                        <div class="bg-light p-4 rounded-4 mb-4">
+                            <h6 class="fw-900 mb-3 text-uppercase small ls-1 text-primary">Nursing Care Logs</h6>
+                            <div class="log-timeline mb-3">
+                                <div th:each="log : ${nurseLogs}" th:if="${log.patient.id == patient.id}" class="log-item">
+                                    <span class="d-block small fw-800 text-muted" th:text="${#temporals.format(log.logTime, 'dd MMM, HH:mm')}">Time</span>
+                                    <p class="mb-1 fw-600 small" th:text="${log.logEntry}">Care observation...</p>
+                                    <span class="small text-primary fw-700" th:text="|By: ${log.nurse.fullName}|">Nurse Name</span>
+                                </div>
+                                <div th:if="${#lists.isEmpty(nurseLogs.?[patient.id == __${patient.id}__])}" class="text-center py-4">
+                                    <p class="text-muted small fw-600 mb-0">No nurse logs recorded yet for this patient.</p>
+                                </div>
+                            </div>
+                            <form th:action="@{/nurse/log/add}" method="post">
+                                <input type="hidden" name="id" th:value="${patient.id}">
+                                <div class="input-group">
+                                    <input type="text" name="entry" class="form-control border-0 rounded-start-pill px-3 fw-600 small" 
+                                           placeholder="Enter new clinical observation..." required>
+                                    <button class="btn btn-primary rounded-end-pill px-4" type="submit">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(patients)}" class="col-12 text-center py-5">
+                    <div class="opacity-25 mb-3">
+                        <i class="bi bi-emoji-heart-eyes fs-1"></i>
+                    </div>
+                    <h4 class="text-muted fw-800">No patients currently in your ward.</h4>
+                    <p class="text-muted fw-600">Great job! All patients are stable or discharged.</p>
+                </div>
+            </div>
+
+            <!-- MODALS SECTION - Outside main loop for better Bootstrap performance -->
+            <div th:each="patient : ${patients}">
+                <!-- Bed Assignment Modal -->
+                <div class="modal fade" th:id="'bedModal' + ${patient.id}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+                            <div class="modal-body p-4 text-center">
+                                <h5 class="fw-900 mb-4">Assign Bed Number</h5>
+                                <form th:action="@{/nurse/admit}" method="post">
+                                    <input type="hidden" name="id" th:value="${patient.id}">
+                                    
+                                    <div class="mb-4">
+                                        <label class="small fw-800 text-muted text-uppercase mb-2 d-block">Select Available Bed</label>
+                                        <select name="bed" class="form-select text-center fs-5 fw-900 border-2 rounded-4 p-3" required>
+                                            <option value="" disabled th:selected="${patient.bedNumber == null}">-- Pick a Bed --</option>
+                                            <!-- Logic: Generate beds 1 to Capacity, filter out those taken by other patients -->
+                                            <th:block th:if="${patient.ward != null}">
+                                                <option th:each="i : ${#numbers.sequence(1, patient.ward.capacity)}" 
+                                                        th:value="|Bed ${i}|" 
+                                                        th:text="|Bed ${i}|"
+                                                        th:selected="${patient.bedNumber == 'Bed ' + i}">
+                                                    Bed 1
+                                                </option>
+                                            </th:block>
+                                        </select>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-800 shadow-sm">Save Assignment</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finalize Care Modal -->
+                <div class="modal fade" th:id="'finalizeModal' + ${patient.id}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+                            <div class="modal-body p-4 text-center">
+                                <h5 class="fw-900 mb-3">Finalize Nursing Care</h5>
+                                <p class="text-muted small fw-600 mb-4">Where should this patient be routed next?</p>
+                                <form th:action="@{/nurse/finalize}" method="post">
+                                    <input type="hidden" name="id" th:value="${patient.id}">
+                                    <div class="d-grid gap-3">
+                                        <button type="submit" name="status" value="PHARMACY" class="btn btn-outline-success rounded-pill py-3 fw-800">
+                                            <i class="bi bi-capsule me-2"></i> Discharge to Pharmacy
+                                        </button>
+                                        <button type="submit" name="status" value="BILLING" class="btn btn-outline-info rounded-pill py-3 fw-800">
+                                            <i class="bi bi-receipt me-2"></i> Discharge to Billing
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

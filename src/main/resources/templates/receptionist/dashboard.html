@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .unified-reception-view})}">
+        <div class="unified-reception-view">
+
+            <!-- Success Modal for Fish Generation -->
+            <div th:if="${patientId}" class="card border-0 shadow-lg p-5 mb-5"
+                style="border-radius: 30px; background: #f0fdf4;">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="bg-success text-white p-4 rounded-circle">
+                        <i class="bi bi-printer-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-900 text-success mb-1">Receipt (Fish) Generated!</h3>
+                        <p class="mb-2 fw-700 text-dark">Patient ID: <span class="bg-success-subtle px-2 py-1 rounded"
+                                th:text="${patientId}">PAT-000</span></p>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary px-3 py-2 rounded-pill fw-800">
+                                Assigned to: <i class="bi bi-person-badge ms-1"></i> <span
+                                    th:text="${assignedDoctor.startsWith('Dr.') ? assignedDoctor : 'Dr. ' + assignedDoctor}">Dr. House</span>
+                            </span>
+                            <button class="btn btn-sm btn-outline-success rounded-pill fw-800 ms-3">
+                                <i class="bi bi-download me-1"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1 text-dark">Reception Command Center</h2>
+                    <p class="text-muted fw-600">Arrival, Payment Verification, and Automated Doctor Assignment.</p>
+                </div>
+                <div>
+                    <a th:href="@{/receptionist/arrival}"
+                        class="btn btn-primary rounded-pill px-5 py-3 fw-900 shadow-lg scale-hover">
+                        <i class="bi bi-person-plus-fill me-2 fs-5"></i> NEW PATIENT / MAKE FISH
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="stat-card-v2 border-0 shadow-sm">
+                        <i class="bi bi-people-fill fs-2 text-primary opacity-50 mb-3 d-block"></i>
+                        <h6 class="text-muted fw-800 text-uppercase" style="font-size: 0.7rem;">Waitlist Today</h6>
+                        <h2 class="fw-900" th:text="${#lists.size(patients.?[status == 'QUEUE'])}">0</h2>
+                        <small class="text-primary fw-600">Pending Consultation</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card-v2 border-0 shadow-sm">
+                        <i class="bi bi-currency-dollar fs-2 text-success opacity-50 mb-3 d-block"></i>
+                        <h6 class="text-muted fw-800 text-uppercase" style="font-size: 0.7rem;">Collections Today</h6>
+                        <h2 class="fw-900" th:text="'$' + ${#numbers.formatDecimal(totalCollections, 1, 2)}">$0.00</h2>
+                        <small class="text-success fw-600">Payments Recorded</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card-v2 border-0 shadow-sm">
+                        <i class="bi bi-shield-check fs-2 text-info opacity-50 mb-3 d-block"></i>
+                        <h6 class="text-muted fw-800 text-uppercase" style="font-size: 0.7rem;">Insurance Clearing</h6>
+                        <h2 class="fw-900">85%</h2>
+                        <small class="text-info fw-600">Verification Rate</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-4 overflow-hidden" style="border-radius: 30px;">
+                <h5 class="fw-800 mb-4 px-2">Active Waiting Queue / Fish Records</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle custom-table mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="px-4 py-3">Patient Name</th>
+                                <th class="py-3">Unique ID</th>
+                                <th class="py-3">Assigned Doctor</th>
+                                <th class="py-3">Fish Status</th>
+                                <th class="py-3">Date/Time</th>
+                                <th class="px-4 text-end py-3">Process</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-700">
+                            <tr th:each="patient : ${patients}" class="border-transparent">
+                                <td class="px-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bg-primary-subtle text-primary p-2 rounded-circle fw-900"
+                                            style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;"
+                                            th:text="${#strings.substring(patient.name,0,1)}">A</div>
+                                        <span th:text="${patient.name}">Patient Name</span>
+                                    </div>
+                                </td>
+                                <td class="text-primary" th:text="${patient.patientId}">PAT-001</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-person-badge-fill text-muted"></i>
+                                        <span th:text="${patient.assignedDoctor.startsWith('Dr.') ? patient.assignedDoctor : 'Dr. ' + patient.assignedDoctor}">Dr. House</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span th:if="${patient.paymentStatus == 'Pending'}"
+                                        class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 rounded-pill">Pending
+                                        Payment</span>
+                                    <span th:unless="${patient.paymentStatus == 'Pending'}"
+                                        class="badge bg-success-subtle text-success border border-success-subtle px-3 rounded-pill">Ready
+                                        for Visit</span>
+                                </td>
+                                <td class="text-muted small"
+                                    th:text="${#temporals.format(patient.createdAt, 'dd MMM, HH:mm')}">Time</td>
+                                <td class="px-4 text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm rounded-pill p-2" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 rounded-4">
+                                            <li><a class="dropdown-item rounded-3 py-2" href="#"><i
+                                                        class="bi bi-printer me-2"></i>Reprint Fish</a></li>
+                                            <li><a class="dropdown-item rounded-3 py-2 text-primary" href="#"><i
+                                                        class="bi bi-cash me-2"></i>Verify Payment</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(patients)}">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 mb-3 d-block opacity-25"></i>
+                                    <p>No patients currently in the waiting queue.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

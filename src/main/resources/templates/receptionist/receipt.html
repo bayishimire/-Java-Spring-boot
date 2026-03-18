@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+    <div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .receipt-unified-view})}">
+        <div class="receipt-unified-view">
+            
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-900 mb-1">Clinic Receipt & "Fish" Records</h2>
+                    <p class="text-muted fw-600">Generate and print patient tokens for departmental visits.</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg p-5" style="border-radius: 40px; background: white;">
+                <h4 class="fw-900 mb-4">Finalized "Fish" Gallery</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle custom-table mb-0 text-center">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="py-3">Fish ID</th>
+                                <th class="py-3">Patient Name</th>
+                                <th class="py-3">Department Target</th>
+                                <th class="py-3">Assigned Doctor</th>
+                                <th class="px-4 text-end py-3">Quick Print</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fw-700">
+                             <tr th:each="patient : ${patients}" class="border-transparent">
+                                 <td class="text-primary fw-900" th:text="${patient.patientId}">PAT-001</td>
+                                 <td class="text-start px-4">
+                                     <span th:text="${patient.name}">Patient Name</span>
+                                 </td>
+                                 <td>
+                                     <span th:if="${patient.status == 'QUEUE'}" class="badge bg-secondary-subtle text-secondary rounded-pill">OPD</span>
+                                     <span th:if="${patient.status != 'QUEUE'}" class="badge bg-info-subtle text-info rounded-pill" th:text="${patient.status}">STATUS</span>
+                                 </td>
+                                 <td th:text="|Dr. ${patient.assignedDoctor}|">Doctor Name</td>
+                                 <td class="px-4 text-end">
+                                     <button class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-800 shadow-sm">
+                                         <i class="bi bi-printer-fill me-2"></i> Print Token
+                                     </button>
+                                 </td>
+                             </tr>
+                             <tr th:if="${#lists.isEmpty(patients)}">
+                                 <td colspan="5" class="text-center py-5 text-muted opacity-50">None currently available for printing.</td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

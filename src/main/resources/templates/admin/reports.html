@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{dashboard_layout :: dashboard_head}"></head>
+<body>
+<div th:replace="~{dashboard_layout :: dashboard_structure(~{:: .admin-reports-view})}">
+    <div class="admin-reports-view">
+
+        <style>
+            .rep-page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; }
+            .rep-page-header h2 { font-weight:900; margin:0; font-size:1.9rem; letter-spacing:-0.5px; }
+            .rep-page-header p  { color:#64748b; margin:0.25rem 0 0; font-weight:600; }
+
+            .kpi-card {
+                background:white;
+                border-radius:28px;
+                padding:2rem;
+                box-shadow:0 4px 24px rgba(0,0,0,0.05);
+                display:flex;
+                flex-direction:column;
+                gap:0.5rem;
+                height:100%;
+            }
+            .kpi-icon { width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:0.5rem; }
+            .kpi-value { font-size:2rem;font-weight:900;color:#1e293b;line-height:1; }
+            .kpi-label { font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.6px;color:#94a3b8; }
+            .kpi-delta { font-size:0.8rem;font-weight:700; }
+            .delta-up   { color:#16a34a; }
+            .delta-down { color:#dc2626; }
+
+            .chart-card {
+                background:white;
+                border-radius:28px;
+                padding:2rem;
+                box-shadow:0 4px 24px rgba(0,0,0,0.05);
+                height:100%;
+            }
+            .chart-card h5 { font-weight:900;margin-bottom:1.5rem;font-size:1rem; }
+
+            /* horizontal bar chart */
+            .hbar-wrap { display:flex;flex-direction:column;gap:1rem; }
+            .hbar-item { display:flex;flex-direction:column;gap:6px; }
+            .hbar-top  { display:flex;justify-content:space-between;font-size:0.85rem;font-weight:700;color:#334155; }
+            .hbar-track { background:#f1f5f9;border-radius:99px;height:10px;overflow:hidden; }
+            .hbar-fill  { height:100%;border-radius:99px;transition:width 0.8s ease; }
+
+            /* status pills */
+            .status-pill {
+                display:inline-flex;align-items:center;gap:5px;
+                padding:4px 12px;border-radius:99px;
+                font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;
+            }
+            .sp-queue     { background:#fef9c3;color:#854d0e; }
+            .sp-consulting{ background:#dbeafe;color:#1d4ed8; }
+            .sp-lab       { background:#ffedd5;color:#9a3412; }
+            .sp-pharmacy  { background:#dcfce7;color:#15803d; }
+            .sp-ward      { background:#fce7f3;color:#9d174d; }
+            .sp-billing   { background:#ede9fe;color:#6d28d9; }
+            .sp-discharged{ background:#f1f5f9;color:#475569; }
+
+            .recent-table-card {
+                background:white;border-radius:28px;
+                box-shadow:0 4px 24px rgba(0,0,0,0.05);overflow:hidden;
+            }
+            .recent-table-card table { margin:0; }
+            .recent-table-card thead th {
+                background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#64748b;
+                font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;
+                padding:1rem 1.5rem;
+            }
+            .recent-table-card tbody td {
+                padding:0.85rem 1.5rem;vertical-align:middle;
+                border-bottom:1px solid #f1f5f9;font-weight:600;font-size:0.88rem;
+            }
+            .recent-table-card tbody tr:last-child td { border-bottom:none; }
+            .recent-table-card tbody tr:hover { background:#fafbff; }
+        </style>
+
+        <!-- PAGE HEADER -->
+        <div class="rep-page-header">
+            <div>
+                <h2><i class="bi bi-graph-up-arrow me-2 text-success"></i>Hospital Analytics</h2>
+                <p>Live operational intelligence and performance metrics.</p>
+            </div>
+            <span class="badge bg-success rounded-pill px-3 py-2 fw-800" style="font-size:0.75rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>LIVE DATA
+            </span>
+        </div>
+
+        <!-- KPI CARDS ROW -->
+        <div class="row g-4 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background:#eff6ff;"><i class="bi bi-people-fill" style="color:#3b82f6;"></i></div>
+                    <div class="kpi-value" th:text="${totalPatients}">0</div>
+                    <div class="kpi-label">Total Patients</div>
+                    <div class="kpi-delta delta-up"><i class="bi bi-arrow-up-short"></i>All time</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background:#f0fdf4;"><i class="bi bi-cash-stack" style="color:#16a34a;"></i></div>
+                    <div class="kpi-value" th:text="'$' + ${#numbers.formatDecimal(totalRevenue, 1, 0)}">$0</div>
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-delta delta-up"><i class="bi bi-arrow-up-short"></i>Paid invoices</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background:#fdf4ff;"><i class="bi bi-activity" style="color:#a855f7;"></i></div>
+                    <div class="kpi-value" th:text="${activeCount}">0</div>
+                    <div class="kpi-label">Active Cases</div>
+                    <div class="kpi-delta" style="color:#a855f7;"><i class="bi bi-dot"></i>In-clinic now</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="background:#fff7ed;"><i class="bi bi-person-check-fill" style="color:#f97316;"></i></div>
+                    <div class="kpi-value" th:text="${dischargedCount}">0</div>
+                    <div class="kpi-label">Discharged</div>
+                    <div class="kpi-delta delta-up"><i class="bi bi-arrow-up-short"></i>Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHARTS ROW -->
+        <div class="row g-4 mb-4">
+            <!-- Patient Status Breakdown -->
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <h5><i class="bi bi-bar-chart-line me-2 text-primary"></i>Patient Status Breakdown</h5>
+                    <div class="hbar-wrap">
+                        <div class="hbar-item" th:each="entry : ${statusCounts}">
+                            <div class="hbar-top">
+                                <span th:text="${entry.key}">Status</span>
+                                <span th:text="${entry.value}">0</span>
+                            </div>
+                            <div class="hbar-track">
+                                <div class="hbar-fill"
+                                     th:style="'width:' + (${totalPatients} > 0 ? ${entry.value * 100 / totalPatients} : 0) + '%; background:' + ${statusColors.get(entry.key)}"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Role Breakdown -->
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <h5><i class="bi bi-people me-2 text-info"></i>Staff Role Distribution</h5>
+                    <div class="hbar-wrap">
+                        <div class="hbar-item" th:each="entry : ${roleCounts}">
+                            <div class="hbar-top">
+                                <span th:text="${entry.key.toString().replace('_',' ')}">Role</span>
+                                <span th:text="${entry.value}">0</span>
+                            </div>
+                            <div class="hbar-track">
+                                <div class="hbar-fill"
+                                     th:style="'width:' + (${totalStaff} > 0 ? ${entry.value * 100 / totalStaff} : 0) + '%; background: linear-gradient(90deg,#6366f1,#4f46e5);'"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT PATIENTS TABLE -->
+        <div class="recent-table-card">
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="fw-900 mb-0">Recent Patients</h5>
+                    <small class="text-muted fw-600">Last 10 patient registrations</small>
+                </div>
+                <a th:href="@{/receptionist/flow}" class="btn btn-outline-primary rounded-pill btn-sm fw-800 px-3">
+                    <i class="bi bi-eye me-1"></i>Full Flow
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Name</th>
+                            <th>Assigned Doctor</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th class="text-end">Charges</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${recentPatients}">
+                            <td><code class="fw-700" style="font-size:0.78rem;" th:text="${p.patientId}">ID</code></td>
+                            <td class="fw-700" th:text="${p.name}">Name</td>
+                            <td class="text-muted fw-600" th:text="${p.assignedDoctor != null ? (p.assignedDoctor.startsWith('Dr.') ? p.assignedDoctor : 'Dr. ' + p.assignedDoctor) : '—'}">Doctor</td>
+                            <td>
+                                <span class="status-pill"
+                                      th:classappend="'sp-' + ${p.status.toLowerCase()}"
+                                      th:text="${p.status}">STATUS</span>
+                            </td>
+                            <td>
+                                <span class="fw-700"
+                                      th:style="${'Paid'.equals(p.paymentStatus)} ? 'color:#16a34a;' : 'color:#f97316;'"
+                                      th:text="${p.paymentStatus}">Pending</span>
+                            </td>
+                            <td class="text-end fw-800" th:text="'$' + ${#numbers.formatDecimal(p.totalCharges, 1, 2)}">$0.00</td>
+                        </tr>
+                        <tr th:if="${recentPatients.isEmpty()}">
+                            <td colspan="6" class="text-center py-5 text-muted fw-700">No patient records yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
